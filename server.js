@@ -117,13 +117,17 @@ app.get('/products/:id', (req, res) => {
 });
 
 // Orders endpoints
-app.get('/orders', (req, res) => {
-    res.send(orders);
+// get and post orders can only authorized user
+app.get('/orders', authenticateSession, (req, res) => {
+    const ordersByAuthUser = orders.filter(order => req.session.user.id === order.customerId);
+    res.send(ordersByAuthUser);
 });
 
-app.get('/orders/:id', (req, res) => {
+
+//The user can only find an order by its ID among their own orders
+app.get('/orders/:id', authenticateSession, (req, res) => {
     const id = Number(req.params.id);
-    const order = orders.find((o) => o.id === id);
+    const order = orders.find((o) => o.id === id && o.customerId === req.session.user.id);
     if (order) {
         res.send(order);
     } else {
