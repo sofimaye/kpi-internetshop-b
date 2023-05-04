@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add User</title>
+</head>
+<body>
+<h1>Add User</h1>
+<form method="POST" action="/users">
+    <div>
+        <label for="name">Name:</label>
+        <label>
+            <input type="text" name="name" required>
+        </label>
+    </div>
+    <div>
+        <label for="email">Email:</label>
+        <label>
+            <input type="email" name="email" required>
+        </label>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <label>
+            <input type="password" name="password" required>
+        </label>
+    </div>
+    <button type="submit">Add User</button>
+</form>
+</body>
+</html>

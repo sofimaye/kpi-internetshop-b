@@ -2,13 +2,19 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 const session = require('express-session');
+const ejs = require('ejs');
 
 app.use(express.json());
+app.use(express.urlencoded());
 app.use(session({
     secret: 'mysecretkey',
     resave: false,
     saveUninitialized: true
 }));
+
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views');
+// app.set('views', '/views');
 
 // data for products, orders, users, and reviews
 const products = [
@@ -36,7 +42,9 @@ const reviews = [
     { id: 3, productId: 3, userId: 3, rating: 3, comment: 'Average product.' },
 ];
 
-
+app.get('/users/new', (req, res) => {
+    res.render('add-user');
+});
 // Create a new user
 app.post('/users', (req, res) => {
     const { name, email, password } = req.body;
@@ -48,12 +56,18 @@ app.post('/users', (req, res) => {
     // Create a new user
     const newUser = { id: users.length + 1, name, email, password };
     users.push(newUser);
+
+    res.redirect('/users');
+});
+app.get('/users', (req, res) => {
+    res.render('users', { users });
 });
 
 // Only authorized user can post, put and delete
 // ______________________________________________________________________________________________
 // Login route
 app.post('/login', (req, res) => {
+    res.render('login');
     const { name, password } = req.body;
     const user = users.find(u => u.name === name && u.password === password);
     if (user) {
@@ -165,9 +179,9 @@ app.delete('/orders/:id', authenticateSession, (req, res) => {
 });
 
 // Users endpoints
-app.get('/users', (req, res) => {
-    res.send(users);
-});
+// app.get('/users', (req, res) => {
+//     res.send(users);
+// });
 
 app.get('/users/:id', (req, res) => {
     const id = Number(req.params.id);

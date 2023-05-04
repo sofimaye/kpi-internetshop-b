@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Authorization</title>
+</head>
+<body>
+<!--<% if (message) { %>-->
+<!--    <p><%= message %></p>-->
+<!--<% } %>-->
+<form method="POST" action="/login">
+    <div>
+        <label for="name">Username:</label>
+        <input type="text" name="name" id="name">
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" id="password">
+    </div>
+    <button type="submit">Login</button>
+</form>
+</body>
+</html>
