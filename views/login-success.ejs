@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Authorization</title>
+</head>
+<body>
+<div>
+    <h1>Welcome, <%= user.name%></h1>
+</div>
+<div>
+    <h2>Orders</h2>
+    <% if (!ordersByCustomer || ordersByCustomer.length === 0) { %>
+        <p>There are no orders yet.</p>
+    <% } else { %>
+        <% ordersByCustomer.forEach((order) => { %>
+            <ul>
+                <li>
+                    <%= "order id: " + order.id %>
+                </li>
+                <li>
+                    <%= "order customer id: " + order.customerId %>
+                </li>
+                <% if (order.productId && order.productId.length > 0) { %>
+                    <li>
+                        order product IDs:
+                        <ul>
+                            <% order.productId.forEach((productId) => { %>
+                                <li>
+                                    <%= productId %>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    </li>
+                <% } %>
+            </ul>
+        <% }) %>
+    <% } %>
+</div>
+
+<div>
+    <h2>Reviews:</h2>
+    <% if (!reviewsByCustomer || reviewsByCustomer.length === 0) { %>
+        <p>There are no reviews yet.</p>
+    <% } else { %>
+        <% reviewsByCustomer.forEach((review) => { %>
+            <ul>
+                <% if (review.id) { %>
+                    <li>
+                        <%= "review id: " + review.id%>
+                    </li>
+                <% } %>
+                <% if (review.customerId) { %>
+                    <li>
+                        <%= "review customer id: " + review.customerId%>
+                    </li>
+                <% } %>
+                <% if (review.rating) { %>
+                    <li>
+                        <%= "review rating: " + review.rating%>
+                    </li>
+                <% } %>
+                <% if (review.comment) { %>
+                    <li>
+                        <%= "review comment: " + review.comment%>
+                    </li>
+                <% } %>
+            </ul>
+        <% })%>
+    <% } %>
+</div>
+<a href="/">Logout</a>
+</body>
+</html>

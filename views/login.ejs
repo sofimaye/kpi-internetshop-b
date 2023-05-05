@@ -5,10 +5,7 @@
     <title>User Authorization</title>
 </head>
 <body>
-<!--<% if (message) { %>-->
-<!--    <p><%= message %></p>-->
-<!--<% } %>-->
-<form method="POST" action="/login">
+<form method="POST" action="/">
     <div>
         <label for="name">Username:</label>
         <input type="text" name="name" id="name">
@@ -19,5 +16,7 @@
     </div>
     <button type="submit">Login</button>
 </form>
+
+<a href="/users/new">Registration</a>
 </body>
 </html>

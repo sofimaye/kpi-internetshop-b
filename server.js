@@ -14,19 +14,22 @@ app.use(session({
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
-// app.set('views', '/views');
 
 // data for products, orders, users, and reviews
 const products = [
     { id: 1, name: 'Product 1', price: 10 },
     { id: 2, name: 'Product 2', price: 20 },
     { id: 3, name: 'Product 3', price: 30 },
+    { id: 4, name: 'Product 4', price: 40 },
+    { id: 5, name: 'Product 5', price: 50 },
+    { id: 6, name: 'Product 6', price: 60 },
+    { id: 7, name: 'Product 7', price: 70 },
 ];
 
 const orders = [
-    { id: 1, customerId: 1, productId: 1 },
-    { id: 2, customerId: 2, productId: 2 },
-    { id: 3, customerId: 3, productId: 3 },
+    { id: 1, customerId: 1, productId: [1,2,3,4]},
+    { id: 2, customerId: 2, productId: [2,3]},
+    { id: 3, customerId: 3, productId: [3,6,7]},
 ];
 
 const users = [
@@ -51,12 +54,12 @@ app.post('/users', (req, res) => {
     // Check if user with the same email already exists
     const userExists = users.find((user) => user.email === email);
     if (userExists) {
-        return res.status(409).send({ message: 'User with this email already exists' });
+        console.log(userExists)
+        return res.render('add-user-fail', {email});
     }
     // Create a new user
     const newUser = { id: users.length + 1, name, email, password };
     users.push(newUser);
-
     res.redirect('/users');
 });
 app.get('/users', (req, res) => {
@@ -66,17 +69,31 @@ app.get('/users', (req, res) => {
 // Only authorized user can post, put and delete
 // ______________________________________________________________________________________________
 // Login route
-app.post('/login', (req, res) => {
-    res.render('login');
+app.post('/', (req, res) => {
     const { name, password } = req.body;
     const user = users.find(u => u.name === name && u.password === password);
     if (user) {
         req.session.user = user;
-        res.send({ message: 'Logged in successfully' });
+        res.redirect('/user');
     } else {
-        res.status(401).send({ message: 'Invalid credentials' });
+        res.render('login-fail');
     }
 });
+app.get('/user', authenticateSession, (req, res) => {
+    const user = users.find (user => user.id === req.session.user.id);
+    // think about better implementation
+    const ordersByCustomer = orders.filter(o => o.customerId === req.session.user.id);
+    const reviewsByCustomer = reviews.filter(r => r.userId === req.session.user.id);
+    res.render('login-success', {user, ordersByCustomer, reviewsByCustomer});
+})
+
+
+//перевірка якщо юзер залогінений то показувати сторінку юзера
+app.get('/', (req, res) => {
+    res.render('login');
+})
+
+
 // Product creation route
 app.post('/products', authenticateSession, (req, res) => {
     const { name, price } = req.body;
@@ -178,10 +195,6 @@ app.delete('/orders/:id', authenticateSession, (req, res) => {
     }
 });
 
-// Users endpoints
-// app.get('/users', (req, res) => {
-//     res.send(users);
-// });
 
 app.get('/users/:id', (req, res) => {
     const id = Number(req.params.id);
