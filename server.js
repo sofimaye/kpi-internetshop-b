@@ -12,7 +12,10 @@ app.use(session({
 }));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
+
+// adding Redis to cache the amount of documents in collection
 const redis = require('redis');
+const redisClient = redis.createClient();
 
 const {MongoClient} = require("mongodb");
 const client = new MongoClient('mongodb://localhost:27017');
@@ -73,6 +76,7 @@ async function insertData() {
         console.log(err.stack);
     }
 }
+
 //----------------------------------------------------------------
 app.get('/users/new', (req, res) => {
     res.render('add-user');
@@ -95,7 +99,7 @@ app.post('/users', async (req, res) => {
             password
         });
         res.redirect('/users');
-    }catch(err){
+    } catch (err) {
         console.log(err)
         res.render('user-not-added')
     }
@@ -103,15 +107,15 @@ app.post('/users', async (req, res) => {
 
 app.get('/users', async (req, res) => {
     const users = await usersCollection.find().toArray();
-    res.render('users', { users });
+    res.render('users', {users});
 });
 
 // Only authorized user can post, put and delete
 // ______________________________________________________________________________________________
 // Login route
 app.post('/', async (req, res) => {
-    const { name, password } = req.body;
-    const user = await usersCollection.findOne({ name: name, password: password });
+    const {name, password} = req.body;
+    const user = await usersCollection.findOne({name: name, password: password});
     if (user) {
         req.session.user = user;
         res.redirect('/user');
@@ -120,10 +124,10 @@ app.post('/', async (req, res) => {
     }
 });
 app.get('/user', authenticateSession, async (req, res) => {
-    const user = await usersCollection.findOne({ id: req.session.user.id });
-    const ordersByCustomer = await ordersCollection.find({ customerId: req.session.user.id }).toArray();
-    const reviewsByCustomer = await reviewsCollection.find({ userId: req.session.user.id }).toArray();
-    res.render('login-success', { user, ordersByCustomer, reviewsByCustomer });
+    const user = await usersCollection.findOne({id: req.session.user.id});
+    const ordersByCustomer = await ordersCollection.find({customerId: req.session.user.id}).toArray();
+    const reviewsByCustomer = await reviewsCollection.find({userId: req.session.user.id}).toArray();
+    res.render('login-success', {user, ordersByCustomer, reviewsByCustomer});
 });
 
 
@@ -134,21 +138,38 @@ app.get('/', (req, res) => {
 
 // Product creation route
 app.post('/products', authenticateSession, async (req, res) => {
-    const {name, price} = req.body;
-    const productExist = await productsCollection.countDocuments({name, price});
-    if (productExist > 0) {
-        return res.status(408).send({message: 'This product already exists'})
-    } else {
-        const newProduct = {id: await productsCollection.countDocuments() + 1, name, price};
-        await productsCollection.insertOne(newProduct);
-        res.status(201).send(newProduct);
+    try {
+        const {name, price} = req.body;
+        const cacheKey = 'productCount';
+        // Check if the product count exists in cache
+        let productCount = Number(await redisClient.get(cacheKey));
+        if (!productCount) {
+            // If it doesn't exist in cache, get it from the database
+            productCount = await productsCollection.countDocuments();
+            // Store the product count in cache indefinitely
+            await redisClient.set(cacheKey, productCount);
+        }
+        const productExist = await productsCollection.countDocuments({name, price});
+        if (productExist > 0) {
+            return res.status(408).send({message: 'This product already exists'});
+        } else {
+            const newProduct = {id: productCount + 1, name, price};
+            await productsCollection.insertOne(newProduct);
+            // Increment the product count in cache
+            await redisClient.set(cacheKey, productCount + 1);
+            res.status(201).send(newProduct);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
 });
+
 
 // Product update route
 app.patch('/products/:id', authenticateSession, async (req, res) => {
     const id = Number(req.params.id);
-    const result = await productsCollection.findOneAndUpdate({id}, { $set: req.body }, { returnDocument: "after" });
+    const result = await productsCollection.findOneAndUpdate({id}, {$set: req.body}, {returnDocument: "after"});
     if (result.value) {
         res.send(result.value);
     } else {
@@ -186,7 +207,7 @@ app.get('/products/:id', async (req, res) => {
 // Orders endpoints
 // get and post orders can only authorized user
 app.get('/orders', authenticateSession, async (req, res) => {
-    const ordersByAuthUser = await ordersCollection.find({ customerId: req.session.user.id }).toArray();
+    const ordersByAuthUser = await ordersCollection.find({customerId: req.session.user.id}).toArray();
     res.send(ordersByAuthUser);
 });
 
@@ -194,7 +215,7 @@ app.get('/orders', authenticateSession, async (req, res) => {
 //The user can only find an order by its ID among their own orders
 app.get('/orders/:id', async (req, res) => {
     const id = Number(req.params.id);
-    const order = await ordersCollection.findOne({ id });
+    const order = await ordersCollection.findOne({id});
     if (order) {
         res.send(order);
     } else {
@@ -244,7 +265,7 @@ app.delete('/orders/:id', authenticateSession, async (req, res) => {
 
 app.get('/users/:id', async (req, res) => {
     const id = Number(req.params.id);
-    const user = await usersCollection.findOne({ id });
+    const user = await usersCollection.findOne({id});
     if (user) {
         res.send(user);
     } else {
@@ -255,7 +276,7 @@ app.get('/users/:id', async (req, res) => {
 
 app.patch('/users/:id', authenticateSession, async (req, res) => {
     const id = Number(req.params.id);
-    const result = await usersCollection.findOneAndUpdate({id}, { $set: req.body }, { returnDocument: "after" });
+    const result = await usersCollection.findOneAndUpdate({id}, {$set: req.body}, {returnDocument: "after"});
     if (result.value) {
         res.send(result.value);
     } else {
@@ -283,7 +304,7 @@ app.get('/reviews', async (req, res) => {
 
 app.get('/reviews/:id', async (req, res) => {
     const id = Number(req.params.id);
-    const review = await reviewsCollection.findOne({ id });
+    const review = await reviewsCollection.findOne({id});
     if (review) {
         res.send(review);
     } else {
@@ -312,7 +333,7 @@ app.post('/reviews', authenticateSession, async (req, res) => {
 
 app.patch('/reviews/:id', authenticateSession, async (req, res) => {
     const id = Number(req.params.id);
-    const result = await reviewsCollection.findOneAndUpdate({id}, { $set: req.body }, { returnDocument: "after" });
+    const result = await reviewsCollection.findOneAndUpdate({id}, {$set: req.body}, {returnDocument: "after"});
     if (result.value) {
         res.send(result.value);
     } else {
@@ -339,11 +360,14 @@ function authenticateSession(req, res, next) {
 }
 
 client.connect().then(() => {
-    console.log('Connected successfully to server');
-    app.listen(port, () => {
-        console.log(`App listening at http://localhost:${port}`);
+    console.log('Connected successfully to mongo');
+    redisClient.connect().then(() => {
+        console.log('Connected successfully to redis');
+        app.listen(port, () => {
+            console.log(`App listening at http://localhost:${port}`);
+        });
     });
-})
+});
 
 
 
