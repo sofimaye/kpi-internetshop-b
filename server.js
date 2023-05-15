@@ -27,56 +27,6 @@ const usersCollection = db.collection('users');
 const reviewsCollection = db.collection('reviews');
 
 // when first time pull the project invoke this function to add entities to the database
-async function insertData() {
-    // data for products, orders, users, and reviews
-    const products = [
-        {id: 1, name: 'Product 1', price: 10},
-        {id: 2, name: 'Product 2', price: 20},
-        {id: 3, name: 'Product 3', price: 30},
-        {id: 4, name: 'Product 4', price: 40},
-        {id: 5, name: 'Product 5', price: 50},
-        {id: 6, name: 'Product 6', price: 60},
-        {id: 7, name: 'Product 7', price: 70},
-    ];
-
-    const orders = [
-        {id: 1, customerId: 1, productId: [1, 2, 3, 4]},
-        {id: 2, customerId: 2, productId: [2, 3]},
-        {id: 3, customerId: 3, productId: [3, 6, 7]},
-    ];
-
-    const users = [
-        {id: 1, name: 'User 1', email: 'user1@example.com', password: "sm6575895"},
-        {id: 2, name: 'User 2', email: 'user2@example.com', password: "rsgsasnsks"},
-        {id: 3, name: 'User 3', email: 'user3@example.com', password: "123474848jfjf"},
-    ];
-
-
-    const reviews = [
-        {id: 1, productId: 1, userId: 1, rating: 5, comment: 'Great product!'},
-        {id: 2, productId: 2, userId: 2, rating: 4, comment: 'Good product.'},
-        {id: 3, productId: 3, userId: 3, rating: 3, comment: 'Average product.'},
-    ];
-
-    try {
-        // Insert the data into the "products" collection
-        await productsCollection.insertMany(products);
-
-        // Insert the data into the "orders" collection
-        await ordersCollection.insertMany(orders);
-
-        // Insert the data into the "users" collection
-        await usersCollection.insertMany(users);
-
-        // Insert the data into the "reviews" collection
-        await reviewsCollection.insertMany(reviews);
-
-        console.log('Data inserted successfully');
-    } catch (err) {
-        console.log(err.stack);
-    }
-}
-
 //----------------------------------------------------------------
 app.get('/users/new', (req, res) => {
     res.render('add-user');
