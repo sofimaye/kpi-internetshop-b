@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
 const session = require('express-session');
 
 app.use(express.json());
@@ -13,7 +12,6 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
-
 // adding Redis to cache the amount of documents in collection
 const redis = require('redis');
 
@@ -24,7 +22,6 @@ app.locals.dbClient = client;
 app.locals.db = client.db('internetshop-database');
 app.locals.redisClient = redis.createClient();
 
-// when first time pull the project invoke this function to add entities to the database
 //----------------------------------------------------------------
 app.get('/users/new', (req, res) => {
     res.render('add-user');
@@ -66,6 +63,7 @@ app.post('/', async (req, res) => {
     const user = await req.app.locals.db.collection('users').findOne({name: name, password: password});
     if (user) {
         req.session.user = user;
+        console.log("Successful log in of user with session", req.session);
         res.redirect('/user');
     } else {
         res.render('login-fail');
@@ -307,16 +305,6 @@ function authenticateSession(req, res, next) {
         res.status(401).send({message: 'Unauthorized'});
     }
 }
-
-// app.locals.dbClient.connect().then(() => {
-//     console.log('Connected successfully to mongo');
-//     app.locals.redis.connect().then(() => {
-//         console.log('Connected successfully to redis');
-//         app.listen(port, () => {
-//             console.log(`App listening at http://localhost:${port}`);
-//         });
-//     });
-// });
 
 module.exports = app;
 
