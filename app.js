@@ -1,5 +1,6 @@
-const app = require('./server');
 const port = process.env.PORT || 3000;
+require('dotenv').config({path: '.env.prod'});
+const app = require('./server');
 
 app.locals.dbClient.connect().then(() => {
     console.log('Connected successfully to MongoDb Atlas');

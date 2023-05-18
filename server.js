@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-require('dotenv').config();
 const session = require('express-session');
 const {MongoClient} = require("mongodb");
 
@@ -17,17 +16,14 @@ app.set('views', __dirname + '/views');
 // adding Redis to cache the amount of documents in collection
 const redis = require('redis');
 
-const atlasConnectionURL = `mongodb+srv://${process.env.MONGODB_ATLAS_USERNAME}:${process.env.MONGODB_ATLAS_PASSWORD}@${process.env.MONGODB_ATLAS_CLUSTER_URL}/?retryWrites=true&w=majority`;
-const atlasConnectionOptions = {
+const mongoConnectionUrl = process.env.MONGODB_CONNECTION_STRING;
+const mongoConnectionOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 };
 
-const client = new MongoClient(atlasConnectionURL, atlasConnectionOptions);
-
-// const client = new MongoClient('mongodb://localhost:27017');
+const client = new MongoClient(mongoConnectionUrl, mongoConnectionOptions);
 app.locals.dbClient = client;
-// app.locals.db = client.db('internetshop-database');
 app.locals.db = client.db('internetshop-b');
 app.locals.redisClient = redis.createClient();
 

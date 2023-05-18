@@ -1,5 +1,6 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+require('dotenv').config({path: '.env.test'});
 const app = require('./server');
 
 chai.use(chaiHttp);
@@ -394,8 +395,6 @@ describe('App', () => {
                     });
             });
         });
-
-
     });
 
 
